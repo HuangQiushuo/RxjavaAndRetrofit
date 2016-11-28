@@ -1,9 +1,9 @@
 package com.example.a37925.myapplication.network;
 
-import android.content.Context;
-import android.widget.Toast;
+import com.example.a37925.myapplication.entity.User;
+import com.example.a37925.myapplication.entity.UserDao;
 
-import com.example.a37925.myapplication.ProgressBarHandler;
+import java.util.List;
 
 import rx.Subscriber;
 
@@ -14,13 +14,10 @@ import rx.Subscriber;
 public class ProgressSubscriber<T> extends Subscriber<T> {
 
     private ProgressBarHandler handler;
-    private Context context;
-    private SubscriberOnNextListener nextListener;
-
-    public ProgressSubscriber(SubscriberOnNextListener listener, ProgressBarHandler handler, Context context) {
-        this.context = context;
-        this.nextListener = listener;
+    private UserDao userDao;
+    public ProgressSubscriber(UserDao userDao, ProgressBarHandler handler) {
         this.handler = handler;
+        this.userDao = userDao;
     }
 
     private void showProgressDialog(){
@@ -58,7 +55,17 @@ public class ProgressSubscriber<T> extends Subscriber<T> {
     }
 
     public void onNext(T t) {
-        nextListener.onNext(t);
-        increaseProgressDialog();
+        List<User> users = (List<User>) t;
+        int total = users.size();
+        int current = 0;
+        System.out.println(current);
+        for(User user: users) {
+            userDao.insert(user);
+            current++;
+            if(current==total/100){
+                increaseProgressDialog();
+                current = 0;
+            }
+        }
     }
 }
