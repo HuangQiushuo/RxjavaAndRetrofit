@@ -39,7 +39,6 @@ public class NetworkHelper {
                           String query, int count, int start){
         doubanApi.findUsers(query, start, count)
                 .subscribeOn(Schedulers.io())
-                .unsubscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(subscriber);
     }

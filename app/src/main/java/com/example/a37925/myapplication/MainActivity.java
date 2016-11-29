@@ -10,6 +10,7 @@ import android.widget.Toast;
 import com.example.a37925.myapplication.entity.DaoMaster;
 import com.example.a37925.myapplication.entity.User;
 import com.example.a37925.myapplication.entity.UserDao;
+import com.example.a37925.myapplication.entity.UserListEntity;
 import com.example.a37925.myapplication.network.NetworkHelper;
 
 
@@ -22,9 +23,10 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
-    private TextView tv;
+    private TextView insertTextView;
     private UserDao userDao;
     private List<User> users;
+    private TextView fetchTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,14 +34,42 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initViews();
         initDatabase();
-        generateUsers(10000);
+        users = new ArrayList<>();
+        //generateUsers(10000);
+    }
 
+    public void getUsersFromDouban(){
+        for(int i=0;i<10;i++){
+            System.out.println(i);
+            Subscriber<UserListEntity> subscriber = new Subscriber<UserListEntity>() {
+                private int count = 0;
+                @Override
+                public void onCompleted() {
+                    if(count == 20){
+                        Toast.makeText(MainActivity.this, "Get 2000 users complete", Toast.LENGTH_SHORT).show();
+                    }
+
+                }
+
+                @Override
+                public void onError(Throwable e) {
+
+                }
+
+                @Override
+                public void onNext(UserListEntity userListEntity) {
+                    users.addAll(userListEntity.getUsers());
+                    System.out.println(users.size()+":"+userListEntity.getUsers().get(0).getName());
+                }
+            };
+            NetworkHelper.getInstance().findUsers(subscriber, "c", 100, i*100);
+        }
     }
 
     public void initViews(){
-        tv = (TextView) findViewById(R.id.textView);
+        insertTextView = (TextView) findViewById(R.id.insertTextView);
 
-        tv.setOnClickListener(new View.OnClickListener() {
+        insertTextView.setOnClickListener(new View.OnClickListener() {
             private boolean isInserting = false;
             @Override
             public void onClick(View view) {
@@ -52,6 +82,44 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        fetchTextView = (TextView) findViewById(R.id.fetchTextView);
+
+        fetchTextView.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                getUsersFromDouban();
+                //test();
+            }
+        });
+    }
+
+    private void test(){
+
+
+        for(int i = 0;i<10;i++) {
+            Observable observable = Observable.just(i);
+            Subscriber<Integer> subscriber = new Subscriber<Integer>() {
+                @Override
+                public void onCompleted() {
+                    Toast.makeText(MainActivity.this, "Insert complete!", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onError(Throwable e) {
+
+                }
+
+                @Override
+                public void onNext(Integer pb) {
+                    System.out.println(pb);
+                }
+            };
+            observable.subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(subscriber);
+        }
     }
 
     private void initDatabase(){
